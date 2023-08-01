@@ -1,0 +1,26 @@
+{
+    "manifest_version": 3,
+    "name": "DatingAI",
+    "version": "1.0",
+    "permissions": [
+        "activeTab",
+        "storage",
+        "https://*.bumble.com/*"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://*.bumble.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ]
+}
