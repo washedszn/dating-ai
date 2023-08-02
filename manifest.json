@@ -4,8 +4,7 @@
     "version": "1.0",
     "permissions": [
         "activeTab",
-        "storage",
-        "https://*.bumble.com/*"
+        "storage"
     ],
     "action": {
         "default_popup": "popup.html"
@@ -19,6 +18,7 @@
                 "https://*.bumble.com/*"
             ],
             "js": [
+                "jquery.min.js",
                 "content.js"
             ]
         }
