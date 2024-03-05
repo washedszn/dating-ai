@@ -91,6 +91,11 @@ $(document).ready(async function () {
 
         // Save the updated list to localStorage
         localStorage.setItem('profiles', JSON.stringify(profiles));
+        
+        chrome.storage.local.set({profiles: profiles}, function() {
+            console.log('Profiles saved to chrome.storage.local');
+        });
+        
         console.log('Profiles saved to localStorage');
     });
 });
