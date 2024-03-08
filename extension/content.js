@@ -11,13 +11,61 @@ function waitForSelector(selector) {
     });
 }
 
+async function detectFaces(imageUrl) {
+    const img = await faceapi.fetchImage(imageUrl);
+
+    // Enhance the detection with additional features: landmarks, expressions, age, and gender
+    const detectionsWithDetails = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceExpressions()
+        .withAgeAndGender();
+
+    // Filter out images with more than one face detected
+    if (detectionsWithDetails.length !== 1) return [];
+
+    return detectionsWithDetails.map(detection => {
+        // Basic detection box info
+        const { x, y, width, height } = detection.detection.box;
+
+        // Extract additional information
+        const landmarks = detection.landmarks.positions; // Facial landmarks
+        const expressions = detection.expressions; // Facial expressions
+        const age = detection.age; // Estimated age
+        const gender = detection.gender; // Gender
+
+        // Instead of returning an image, return an object with all the extracted information
+        return {
+            box: { x, y, width, height },
+            landmarks,
+            expressions,
+            age,
+            gender
+        };
+    });
+}
+
+
 // Function to extract profile information
 async function extractProfileInfo(html) {
-    let profile = {};
-    let $html = $(html)
+    let profile = {
+        faces: [], // Array to hold the face images
+        name: '',
+        age: '',
+        isVerified: false,
+        location: {},
+        attributes: [],
+        storyContent: [],
+        spotifyArtists: []
+    };
+    let $html = $(html);
 
-    // Extract profile picture URL
-    // profile.picture = $(".media-box__picture-image").attr("src");
+    // First, extract all the image URLs
+    const faceDetectionPromises = $(".media-box__picture-image", $html).map((i, el) => {
+        return detectFaces($(el).attr('src'));
+    }).get();
+
+    const facesResults = await Promise.all(faceDetectionPromises);
+    profile.faces = facesResults.flat();
 
     // Extract name and age
     profile.name = $html.find(".encounters-story-profile__name").text();
@@ -67,8 +115,14 @@ async function extractProfileInfo(html) {
 }
 
 $(document).ready(async function () {
-    console.log('Document is ready');
-
+    await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/cgarciagl/face-api.js/weights'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/cgarciagl/face-api.js/weights'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/gh/cgarciagl/face-api.js/weights'),
+        faceapi.nets.faceExpressionNet.loadFromUri('https://cdn.jsdelivr.net/gh/cgarciagl/face-api.js/weights'),
+        faceapi.nets.ageGenderNet.loadFromUri('https://cdn.jsdelivr.net/gh/cgarciagl/face-api.js/weights')
+    ]);
+    
     $(document).on('mousedown', '.encounters-action--like, .encounters-action--dislike', async function (event) {
         // Get the current HTML of the document
         let html = document.documentElement.innerHTML;

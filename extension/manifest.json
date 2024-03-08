@@ -19,7 +19,8 @@
                 "https://*.bumble.com/*"
             ],
             "js": [
-                "jquery.min.js",
+                "./lib/face-api.min.js",
+                "./lib/jquery.min.js",
                 "content.js"
             ]
         }
